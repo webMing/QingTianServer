@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"hosts"
+	"stephanie.io/hosts"
 )
 
 func main() {
