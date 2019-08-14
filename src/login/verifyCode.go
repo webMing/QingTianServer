@@ -138,14 +138,22 @@ func genValidateCode(width int) string {
 	return sb.String()
 }
 
-func redisHelperExists(key string) (exist bool, err error) {
-	// 判断当前短信是否有效
-	c, err := redis.Dial("tcp", "192.168.1.105:6379")
+const redisConnAddr = "192.168.1.105:6379"
+func redisHelpBase(f func(conn redis.Conn)(ret ...interface{})){
+	c, err := redis.Dial("tcp",redisConnAddr)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer c.Close()
-	return redis.Bool(c.Do("EXISTS", key))
+	f(c)
+}
+
+func redisHelperExists(key string) (exist bool, err error) {
+	// 判断当前短信是否有效
+	f := func(conn redis.Conn){
+		redis.Bool(c.Do("EXISTS", key))
+	}
+	redisHelpBase(f)
 }
 
 func redisHelperSet(key, value string, ex int) (reply interface{}, err error) {
