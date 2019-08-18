@@ -37,19 +37,6 @@ func SmsVerificationCode(phoneNum string) (code string, err error) {
 	return smsReqeust(phoneNum)
 }
 
-//fetchCode 获取短信验证码
-func testCode(phoneNum string) {
-	formdata := url.Values{
-		"name":    {"masum"},
-		"content": []string{"li", "wang"},
-	}
-	resp, err := http.PostForm("http://yun.tim.qq.com/v5/tlssmssvr/sendsms?sid=sid", formdata)
-	if err != nil {
-
-	}
-	fmt.Println(resp)
-}
-
 func smsReqeust(phoneNum string) (code string, err error) {
 
 	expireTime := 3
@@ -67,14 +54,14 @@ func smsReqeust(phoneNum string) (code string, err error) {
 
 	url, err := url.Parse("https://yun.tim.qq.com/v5/tlssmssvr/sendsms")
 	if err != nil {
-		return "1", fmt.Errorf("%s", "无法获取验证码地址!")
+		return "1", fmt.Errorf("%s", "验证码地址错误")
 	}
 	qury := url.Query()
 	qury.Set("sdkappid", appid)
 	qury.Set("random", random)
 	url.RawQuery = qury.Encode()
 
-	// 6 width verify code
+	// 获取6位长度的验证码 
 	verifyCode := genValidateCode(6)
 	//签名
 	signedStr := "appkey=" + appkey + "&random=" + random + "&time=" + time + "&mobile=" + mobile
@@ -85,7 +72,7 @@ func smsReqeust(phoneNum string) (code string, err error) {
 	message := map[string]interface{}{
 		"params": []string{
 			"您的",       // {1}验证码:{2} {3}分钟内有效
-			verifyCode, //6位验证码
+			verifyCode, //  6位验证码
 			strconv.Itoa(expireTime),
 		},
 		"tel": map[string]interface{}{
@@ -100,15 +87,15 @@ func smsReqeust(phoneNum string) (code string, err error) {
 
 	bytesRepresentation, err := json.Marshal(message)
 	if err != nil {
-		return "1", fmt.Errorf("%s", "json解析失败")
+		return "1", fmt.Errorf("%s", "获取验证码请求参数转换json出错")
 	}
-	// return "1", fmt.Errorf("%s","json解析失败")
 	fmt.Println("网络请求中......")
 	resp, err := http.Post(url.String(), "application/json", bytes.NewBuffer(bytesRepresentation))
 	fmt.Println("网络请求完成......")
 	if err != nil {
-		return "1", fmt.Errorf("%s", "获取验证码失败")
+		return "1", fmt.Errorf("%s", "获取验证码网络请求失败")
 	}
+	defer resp.Body.Close()
 	fmt.Println("处理返回结果......")
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
@@ -138,44 +125,42 @@ func genValidateCode(width int) string {
 	return sb.String()
 }
 
-const redisConnAddr = "192.168.1.105:6379"
-func redisHelpBase(f func(conn redis.Conn)(ret ...interface{})){
+const redisConnAddr = "192.168.1.100:6379"
+func redisHelpBase(f func(conn redis.Conn)){
 	c, err := redis.Dial("tcp",redisConnAddr)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer c.Close()
 	f(c)
+	defer c.Close()
 }
-
+// redisHelperExists 判断键是否存在
 func redisHelperExists(key string) (exist bool, err error) {
-	// 判断当前短信是否有效
 	f := func(conn redis.Conn){
-		redis.Bool(c.Do("EXISTS", key))
+		exist,err = redis.Bool(conn.Do("EXISTS", key))
 	}
 	redisHelpBase(f)
+	return
 }
-
+// redisHelperSet 设置键
 func redisHelperSet(key, value string, ex int) (reply interface{}, err error) {
-	// redis 本地地址会随着环境不同而不同.
-	c, err := redis.Dial("tcp", "192.168.1.105:6379")
-	if err != nil {
-		log.Fatalln(err)
+	f := func(conn redis.Conn){
+		if ex != 0{
+			reply,err = conn.Do("SET",key,value,"EX")
+		}else{
+			reply,err = conn.Do("SET",key,value)
+		}
 	}
-	defer c.Close()
-	if ex != 0 {
-		return c.Do("SET", key, value, "EX", ex*60)
-	}
-	return c.Do("SET", key, value)
+	redisHelpBase(f)
+	return
 }
-
+//  redisHelperSet 获取键值
 func redisHelperGet(key string) (reply interface{}, err error) {
-	c, err := redis.Dial("tcp", "192.168.1.105:6379")
-	if err != nil {
-		log.Fatalln(err)
+	f := func(conn redis.Conn){
+		reply,err = conn.Do("GET", key)
 	}
-	defer c.Close()
-	return c.Do("GET", key)
+	redisHelpBase(f)
+	return 
 }
 
 /****

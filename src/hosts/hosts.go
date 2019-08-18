@@ -35,9 +35,13 @@ func Server() {
 		}
 		c.JSON(http.StatusOK, user)
 	})
+	
+	group.POST("/YY", func(c *gin.Context){
+		c.JSON(http.StatusOK,"iij")
+	})
 
 	/* 获取验证码
-	   - phoneNum 手机号
+	   phoneNum 手机号
 	*/
 	group.POST("/verifyCode", func(c *gin.Context) {
 		phoneNum := c.PostForm("phone_num")
