@@ -2,9 +2,10 @@ package hosts
 
 import (
 	"log"
-	"stephanie.io/login"
 	"net/http"
 	"unicode/utf8"
+
+	"stephanie.io/login"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,20 +36,25 @@ func Server() {
 		}
 		c.JSON(http.StatusOK, user)
 	})
-	
-	group.POST("/YY", func(c *gin.Context){
-		c.JSON(http.StatusOK,"iij")
+
+	group.POST("/YY", func(c *gin.Context) {
+		c.JSON(http.StatusOK, "iij")
 	})
 
 	/* 获取验证码
 	   phoneNum 手机号
 	*/
 	group.POST("/verifyCode", func(c *gin.Context) {
-		phoneNum := c.PostForm("phone_num")
+		phoneNum := c.Query("phone_num")
+		// phoneNum := c.PostForm("phone_num")
+		// cc, _ := c.GetQueryMap("phone_num")
+		// ff := c.Param("phone_num")
+		// fmt.Println(cc, ff)
+		//检测手机号位数
 		if utf8.RuneCountInString(phoneNum) != 11 {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 1,
-				"msg":  "手机号位数不对!",
+				"msg":  "手机号位数不是11位",
 			})
 			return
 		}

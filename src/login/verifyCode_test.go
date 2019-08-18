@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"github.com/gomodule/redigo/redis"
+
 )
 
 func TestVerifyCode(t *testing.T) {
@@ -16,13 +18,13 @@ func TestVerifyHttp(t *testing.T) {
 	t.Log("通过网络请求获取验证码")
 
 	message := map[string]string{
-		"phone_num": "13555",
+		"phone_num": "13663788159",
 	}
 	bytesP, err := json.Marshal(message)
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp, err := http.Post("http://localhost:8080/verifyCode ", "application/json", bytes.NewBuffer(bytesP))
+	resp, err := http.Post("http://localhost:8080/api/v1/verifyCode", "application/json", bytes.NewBuffer(bytesP))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,18 +38,44 @@ func TestVerifyHttp(t *testing.T) {
 
 }
 
-func TestYY(t *testing.T){
+func TestYY(t *testing.T) {
 	t.Log("通过网络请求获取验证码")
-	resp, err := http.Post("http://localhost:8080/api/v1/YY", "application/json",nil)
+	resp, err := http.Post("http://localhost:8080/api/v1/YY", "application/json", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
-	var result map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&result)
+	t.Logf("%v", *resp)
+
+}
+
+func TestRedisHelpSet(t *testing.T) {
+	//设置新值,如果设置成功返回字符串OK,
+	reply, err := redis.String(redisHelperSet("my", "my",0))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("%v", result)
+	t.Log(reply)
+}
+func TestRedisHelpGet(t *testing.T){
+	reply,err := redisHelperGet("my")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%s",reply.(string))
+}
+func TestRedisHelpExist(t *testing.T){
+	reply,err := redisHelperExists("my")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(reply)
+}
 
+func TestRedisHelpTTL(t *testing.T){
+	reply,err := redisHelperTTL("my")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(reply.(int64))
 }

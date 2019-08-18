@@ -10,3 +10,7 @@ func TestRegister(t *testing.T) {
 func TestLogin(t *testing.T) {
 	t.Log("测试登录")
 }
+
+func TestSetUpServer(t *testing.T){
+	Server()
+}

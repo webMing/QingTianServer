@@ -39,11 +39,15 @@ func SmsVerificationCode(phoneNum string) (code string, err error) {
 
 func smsReqeust(phoneNum string) (code string, err error) {
 
-	expireTime := 3
+	expireTime := 3  * 60 //过期时间 3 分钟
 
-	exists, _ := redisHelperExists(phoneNum)
-	if exists {
-		return "1", fmt.Errorf("请在%d分钟后重新请求验证码", expireTime)
+	num,err := redis.Int64(redisHelperTTL(phoneNum))
+	if err != nil {
+		return "1",err
+	}
+	// -1 没有设置过期时间.-2 该键目前不存在, other ttl time
+	if num == -1 && num != -2{
+		return "1", fmt.Errorf("请在%d秒后重新请求验证码", num)
 	}
 
 	appid := "1400220829"
@@ -66,7 +70,6 @@ func smsReqeust(phoneNum string) (code string, err error) {
 	//签名
 	signedStr := "appkey=" + appkey + "&random=" + random + "&time=" + time + "&mobile=" + mobile
 	sined := sha256.Sum256([]byte(signedStr))
-	fmt.Println("yy网络请求中......")
 
 	//6位验证码
 	message := map[string]interface{}{
@@ -106,8 +109,8 @@ func smsReqeust(phoneNum string) (code string, err error) {
 	if re == 0 {
 		//save to memory.....
 		fmt.Println("处理redis......")
-		redisHelperSet(phoneNum, verifyCode, expireTime)
-		fmt.Println("完成处理redis......")
+		redisHelperSet(phoneNum,verifyCode, expireTime)
+		fmt.Println("完成redis......")
 	}
 	// 注意errmsg;这个字段不要写错
 	return fmt.Sprint(result["result"]), errors.New(result["errmsg"].(string))
@@ -144,9 +147,11 @@ func redisHelperExists(key string) (exist bool, err error) {
 }
 // redisHelperSet 设置键
 func redisHelperSet(key, value string, ex int) (reply interface{}, err error) {
+	//重新设置key会覆盖之前的设置
 	f := func(conn redis.Conn){
 		if ex != 0{
-			reply,err = conn.Do("SET",key,value,"EX")
+			//ex 默认是秒
+			reply,err = conn.Do("SET",key,value,"EX",ex)
 		}else{
 			reply,err = conn.Do("SET",key,value)
 		}
@@ -162,6 +167,18 @@ func redisHelperGet(key string) (reply interface{}, err error) {
 	redisHelpBase(f)
 	return 
 }
+//  redisHelperTTL 判断键的过期时间
+func redisHelperTTL(key string) (reply interface{}, err error){
+	// -2 该键不存在
+	// -1 改建永久存在
+	// other 倒计时时间
+	f := func(conn redis.Conn){
+		reply,err = conn.Do("TTL",key)
+	}
+	redisHelpBase(f)
+	return
+}
+
 
 /****
 user_client
