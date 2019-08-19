@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
-	"github.com/gomodule/redigo/redis"
 
+	"github.com/gomodule/redigo/redis"
 )
 
 func TestVerifyCode(t *testing.T) {
@@ -18,7 +18,7 @@ func TestVerifyHttp(t *testing.T) {
 	t.Log("通过网络请求获取验证码")
 
 	message := map[string]string{
-		"phone_num": "13663788159",
+		"phone_num": "136637",
 	}
 	bytesP, err := json.Marshal(message)
 	if err != nil {
@@ -51,29 +51,29 @@ func TestYY(t *testing.T) {
 
 func TestRedisHelpSet(t *testing.T) {
 	//设置新值,如果设置成功返回字符串OK,
-	reply, err := redis.String(redisHelperSet("my", "my",0))
+	reply, err := redis.String(redisHelperSet("my", "my", 0))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(reply)
 }
-func TestRedisHelpGet(t *testing.T){
-	reply,err := redisHelperGet("my")
+func TestRedisHelpGet(t *testing.T) {
+	reply, err := redisHelperGet("my")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("%s",reply.(string))
+	t.Logf("%s", reply.(string))
 }
-func TestRedisHelpExist(t *testing.T){
-	reply,err := redisHelperExists("my")
+func TestRedisHelpExist(t *testing.T) {
+	reply, err := redisHelperExists("my")
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(reply)
 }
 
-func TestRedisHelpTTL(t *testing.T){
-	reply,err := redisHelperTTL("my")
+func TestRedisHelpTTL(t *testing.T) {
+	reply, err := redisHelperTTL("my")
 	if err != nil {
 		t.Fatal(err)
 	}

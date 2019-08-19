@@ -45,13 +45,21 @@ func Server() {
 	   phoneNum 手机号
 	*/
 	group.POST("/verifyCode", func(c *gin.Context) {
+		/***********************************
+		cc := c.PostForm("phone_num")
 		phoneNum := c.Query("phone_num")
-		// phoneNum := c.PostForm("phone_num")
-		// cc, _ := c.GetQueryMap("phone_num")
-		// ff := c.Param("phone_num")
-		// fmt.Println(cc, ff)
+		***************************************/
+
+		type replayJSON struct {
+			PhoneNum string `json:"phone_num"`
+		}
+		var ss replayJSON
+		err := c.BindJSON(&ss)
+		if err != nil {
+			panic(err)
+		}
 		//检测手机号位数
-		if utf8.RuneCountInString(phoneNum) != 11 {
+		if utf8.RuneCountInString(ss.PhoneNum) != 11 {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 1,
 				"msg":  "手机号位数不是11位",
@@ -59,7 +67,7 @@ func Server() {
 			return
 		}
 		// 发送验证码网络请求
-		code, err := login.SmsVerificationCode(phoneNum)
+		code, err := login.SmsVerificationCode(ss.PhoneNum)
 		c.JSON(http.StatusOK, gin.H{
 			"code": code,
 			"msg":  err.Error(),
