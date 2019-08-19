@@ -1,6 +1,7 @@
 package hosts
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"unicode/utf8"
@@ -50,16 +51,30 @@ func Server() {
 		phoneNum := c.Query("phone_num")
 		***************************************/
 
-		type replayJSON struct {
+		/***************************************
+		// method 1
+		type replyJSON struct {
 			PhoneNum string `json:"phone_num"`
 		}
-		var ss replayJSON
-		err := c.BindJSON(&ss)
+		var re replyJSON
+		err := c.BindJSON(&re)
 		if err != nil {
 			panic(err)
 		}
+		******************************************/
+
+		len := c.Request.ContentLength
+		body := make([]byte,len)
+		c.Request.Body.Read(body)
+		m := map[string]string{}
+		err := json.Unmarshal(body, &m)
+		if err != nil {
+			panic(err)
+		}
+		phoneNum := m["phone_num"]
+
 		//检测手机号位数
-		if utf8.RuneCountInString(ss.PhoneNum) != 11 {
+		if utf8.RuneCountInString(phoneNum) != 11 {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 1,
 				"msg":  "手机号位数不是11位",
@@ -67,7 +82,7 @@ func Server() {
 			return
 		}
 		// 发送验证码网络请求
-		code, err := login.SmsVerificationCode(ss.PhoneNum)
+		code, err := login.SmsVerificationCode(phoneNum)
 		c.JSON(http.StatusOK, gin.H{
 			"code": code,
 			"msg":  err.Error(),
