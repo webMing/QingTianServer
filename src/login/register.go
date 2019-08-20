@@ -13,7 +13,7 @@ package login
 import (
 	"database/sql"
 	"log"
-
+    _ "github.com/go-sql-driver/mysql" //a blank import should be only in a main or test package, or have a comment justifying it
 	"github.com/gin-gonic/gin"
 )
 
