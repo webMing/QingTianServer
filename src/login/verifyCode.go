@@ -128,7 +128,9 @@ func genValidateCode(width int) string {
 	return sb.String()
 }
 
-const redisConnAddr = "192.168.1.100:6379"
+// 地址可以更改
+// const redisConnAddr = "192.168.1.100:6379"
+const redisConnAddr = "192.168.0.248:6379"
 func redisHelpBase(f func(conn redis.Conn)){
 	c, err := redis.Dial("tcp",redisConnAddr)
 	if err != nil {

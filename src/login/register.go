@@ -31,7 +31,7 @@ device_toke
 // Register 用户注册
 func Register(c *gin.Context) (user map[string]interface{}, err error) {
 
-	db, err := sql.Open("mysql", "root@tcp(localhost)/Ste?timeout=90s&charset=utf8&collation=utf8mb4_unicode_ci")
+	db, err := sql.Open("mysql", "root:centos@tcp(192.168.0.248)/QingTian?timeout=90s&charset=utf8&collation=utf8mb4_unicode_ci")
 	if err != nil {
 		log.Fatal(err)
 	}
