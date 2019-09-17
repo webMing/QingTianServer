@@ -9,7 +9,7 @@
 // Copyright © 2019 Stephanie. All rights reserved.
 //
 
- package login
+package login
 
 import (
 	"bytes"
@@ -17,13 +17,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"stephanie.io/tools"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -39,14 +40,14 @@ func SmsVerificationCode(phoneNum string) (code string, err error) {
 
 func smsReqeust(phoneNum string) (code string, err error) {
 
-	expireTime := 3  * 60 //过期时间 3 分钟
+	expireTime := 3 * 60 //过期时间 3 分钟
 
-	num,err := redis.Int64(redisHelperTTL(phoneNum))
+	num, err := redis.Int64(tools.RedisHelperTTL(phoneNum))
 	if err != nil {
-		return "1",err
+		return "1", err
 	}
 	// -1 没有设置过期时间.-2 该键目前不存在, other ttl time
-	if num == -1 && num != -2{
+	if num == -1 && num != -2 {
 		return "1", fmt.Errorf("请在%d秒后重新请求验证码", num)
 	}
 
@@ -65,7 +66,7 @@ func smsReqeust(phoneNum string) (code string, err error) {
 	qury.Set("random", random)
 	url.RawQuery = qury.Encode()
 
-	// 获取6位长度的验证码 
+	// 获取6位长度的验证码
 	verifyCode := genValidateCode(6)
 	//签名
 	signedStr := "appkey=" + appkey + "&random=" + random + "&time=" + time + "&mobile=" + mobile
@@ -106,10 +107,13 @@ func smsReqeust(phoneNum string) (code string, err error) {
 		return "1", err
 	}
 	re := result["result"].(float64)
+	// 腾讯云没有钱了.改一下代码
+	fmt.Printf("验证码:%s", verifyCode)
+	tools.RedisHelperSet(phoneNum, verifyCode, expireTime)
 	if re == 0 {
 		//save to memory.....
 		fmt.Println("处理redis......")
-		redisHelperSet(phoneNum,verifyCode, expireTime)
+		tools.RedisHelperSet(phoneNum, verifyCode, expireTime)
 		fmt.Println("完成redis......")
 	}
 	// 注意errmsg;这个字段不要写错
@@ -127,67 +131,3 @@ func genValidateCode(width int) string {
 	}
 	return sb.String()
 }
-
-// 地址可以更改
-// const redisConnAddr = "192.168.1.100:6379"
-const redisConnAddr = "192.168.0.248:6379"
-func redisHelpBase(f func(conn redis.Conn)){
-	c, err := redis.Dial("tcp",redisConnAddr)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	f(c)
-	defer c.Close()
-}
-// redisHelperExists 判断键是否存在
-func redisHelperExists(key string) (exist bool, err error) {
-	f := func(conn redis.Conn){
-		exist,err = redis.Bool(conn.Do("EXISTS", key))
-	}
-	redisHelpBase(f)
-	return
-}
-// redisHelperSet 设置键
-func redisHelperSet(key, value string, ex int) (reply interface{}, err error) {
-	//重新设置key会覆盖之前的设置
-	f := func(conn redis.Conn){
-		if ex != 0{
-			//ex 默认是秒
-			reply,err = conn.Do("SET",key,value,"EX",ex)
-		}else{
-			reply,err = conn.Do("SET",key,value)
-		}
-	}
-	redisHelpBase(f)
-	return
-}
-//  redisHelperSet 获取键值
-func redisHelperGet(key string) (reply interface{}, err error) {
-	f := func(conn redis.Conn){
-		reply,err = conn.Do("GET", key)
-	}
-	redisHelpBase(f)
-	return 
-}
-//  redisHelperTTL 判断键的过期时间
-func redisHelperTTL(key string) (reply interface{}, err error){
-	// -2 该键不存在
-	// -1 改建永久存在
-	// other 倒计时时间
-	f := func(conn redis.Conn){
-		reply,err = conn.Do("TTL",key)
-	}
-	redisHelpBase(f)
-	return
-}
-
-
-/****
-user_client
-client_version
-timestamp
-time_code
-global_province_id
-union_id
-device_token
-****/

@@ -12,9 +12,12 @@ package login
 
 import (
 	"database/sql"
+	"errors"
 	"log"
-    _ "github.com/go-sql-driver/mysql" //a blank import should be only in a main or test package, or have a comment justifying it
+	"unicode/utf8"
+
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql" //a blank import should be only in a main or test package, or have a comment justifying it
 )
 
 /* 用户注册
@@ -31,23 +34,40 @@ device_toke
 // Register 用户注册
 func Register(c *gin.Context) (user map[string]interface{}, err error) {
 
-	db, err := sql.Open("mysql", "root:centos@tcp(192.168.0.248)/QingTian?timeout=90s&charset=utf8&collation=utf8mb4_unicode_ci")
+	type replyJSON struct {
+		PhoneNum   string `json:"phone_num"`
+		Passwd     string `json:"passwd"`
+		UserClient string `json:"user_client"`
+	}
+	var re replyJSON
+	err = c.BindJSON(&re)
+	if err != nil {
+		panic(err)
+	}
+
+	if utf8.RuneCountInString(re.PhoneNum) != 11 {
+		user = map[string]interface{}{
+			"code": 1,
+			"msg":  "手机号位数不是11位",
+		}
+		err = errors.New("手机号位数不对")
+		return
+	}
+
+	// 不要使用本地设置
+	//db, err := sql.Open("mysql", "root:centos@tcp(192.168.0.248)/QingTian?timeout=90s&charset=utf8&collation=utf8mb4_unicode_ci")
+	db, err := sql.Open("mysql", "root@tcp(localhost)/QingTian?timeout=90s&charset=utf8&collation=utf8mb4_unicode_ci")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("INSERT INTO user(passwd,phone_num,user_client,user_client_type) VALUES(?,?,?,?)")
+	stmt, err := db.Prepare("INSERT INTO user(user_name,passwd,phone_num,user_client) VALUES(?,?,?,?)")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	passwd := c.PostForm("passwd")
-	phoneNum := c.PostForm("phone_num")
-	userClient := c.PostForm("user_client")
-	clientVersion := c.PostForm("client_version")
-
-	res, err := stmt.Exec(passwd, phoneNum, userClient, clientVersion)
+	res, err := stmt.Exec(re.PhoneNum, re.Passwd, re.PhoneNum, re.UserClient)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -57,7 +77,9 @@ func Register(c *gin.Context) (user map[string]interface{}, err error) {
 		log.Fatalln(err)
 	}
 
-	var u map[string]interface{}
+	// var u map[string]interface{}
+	// 这里的字典不能为空
+	u := make(map[string]interface{})
 	if lastID == 0 {
 		u["code"] = 1
 		u["msg"] = "插入数据出现错误~"
@@ -66,10 +88,9 @@ func Register(c *gin.Context) (user map[string]interface{}, err error) {
 		u["msg"] = "OK"
 	}
 	u["user_id"] = lastID
-	u["phone_num"] = phoneNum
-	u["passwd"] = passwd
-	u["user_client"] = userClient
-	u["client_version"] = clientVersion
+	u["phone_num"] = re.PhoneNum
+	u["passwd"] = re.Passwd
+	u["user_client"] = re.UserClient
 
 	return u, nil
 }
