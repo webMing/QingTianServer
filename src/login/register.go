@@ -64,7 +64,7 @@ func Register(c *gin.Context) (user map[string]interface{}, err error) {
 	if utf8.RuneCountInString(code) == 0 {
 		u := map[string]interface{}{
 			"code": 1,
-			"msg":  "验证码不存在",
+			"msg":  "验证码不存在,请重新获取验证码",
 		}
 		// 不写err,上层如果捕捉到err会停止服务
 		//err = errors.New("验证码不存在")
@@ -110,7 +110,7 @@ func Register(c *gin.Context) (user map[string]interface{}, err error) {
 	u := make(map[string]interface{})
 	if lastID == 0 {
 		u["code"] = 1
-		u["msg"] = "插入数据出现错误~"
+		u["msg"] = "该账号已经注册过,请直接登录~"
 		return u, nil
 	}
 
