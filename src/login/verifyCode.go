@@ -108,7 +108,7 @@ func smsReqeust(phoneNum string) (code string, err error) {
 	}
 	re := result["result"].(float64)
 	// 腾讯云没有钱了.改一下代码
-	fmt.Printf("验证码:%s", verifyCode)
+	fmt.Printf("\n ------------     验证码:%s  -------------------\n", verifyCode)
 	tools.RedisHelperSet(phoneNum, verifyCode, expireTime)
 	if re == 0 {
 		//save to memory.....
