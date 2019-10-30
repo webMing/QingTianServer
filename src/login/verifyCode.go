@@ -47,7 +47,7 @@ func smsReqeust(phoneNum string) (code string, err error) {
 		return "1", err
 	}
 	// -1 没有设置过期时间.-2 该键目前不存在, other ttl time
-	if num == -1 && num != -2 {
+	if num != -1 && num != -2 {
 		return "1", fmt.Errorf("请在%d秒后重新请求验证码", num)
 	}
 
