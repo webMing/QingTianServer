@@ -20,6 +20,30 @@ func Server() {
 	router := gin.Default()
 	group := router.Group(baseURL)
 
+
+	/* 获取UUID
+	该UUID也是可以由客户端生成
+	*/
+	group.POST("/uuid", func(c *gin.Context) {
+		uuid, err := login.UUID()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		c.JSON(http.StatusOK, uuid)
+	})
+
+	/* 获取图片验证码
+	uuid string
+	*/
+	group.POST("/imgCheckCode", func(c *gin.Context) {
+		uuid, err := login.Capthca(c)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		c.JSON(http.StatusOK, uuid)
+	})
+
+
 	/* 用户注册
 	phone_num       	手机号
 	passwd sha265  		密码

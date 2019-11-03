@@ -1,0 +1,77 @@
+package login
+
+import (
+	"bytes"
+	"errors"
+	"image/color"
+	"image/png"
+	"unicode/utf8"
+
+	"github.com/afocus/captcha"
+	"github.com/gin-gonic/gin"
+)
+
+// Capthca 图片验证码
+func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
+
+	type replyJSON struct {
+		UUID       string `json:"uuid"`
+		UserClient string `json:"user_client"`
+	}
+	var re replyJSON
+	err = c.BindJSON(&re)
+	if err != nil {
+		panic(err)
+	}
+
+	// uuid 位数不对
+	if utf8.RuneCountInString(re.UUID) == 0 {
+		u := map[string]interface{}{
+			"code": 1,
+			"msg":  "uuid 不能为空",
+		}
+		// 不写err,上层如果捕捉到err会停止服务
+		// err = errors.New("手机号位数不对")
+		// return u,nil
+		return u, nil
+	}
+
+	cap := captcha.New()
+
+	if err := cap.SetFont("comic.ttf"); err != nil {
+		panic(err.Error())
+	}
+
+	/*
+	   //We can load font not only from localfile, but also from any []byte slice
+	   	fontContenrs, err := ioutil.ReadFile("comic.ttf")
+	   	if err != nil {
+	   		panic(err.Error())
+	   	}
+	   	err = cap.AddFontFromBytes(fontContenrs)
+	   	if err != nil {
+	   		panic(err.Error())
+	   	}
+	*/
+
+	cap.SetSize(128, 64)
+	cap.SetDisturbance(captcha.MEDIUM)
+	cap.SetFrontColor(color.RGBA{255, 255, 255, 255})
+	cap.SetBkgColor(color.RGBA{255, 0, 0, 255}, color.RGBA{0, 0, 255, 255}, color.RGBA{0, 153, 0, 255})
+
+	img, str := cap.Create(6, captcha.NUM)
+	var bfs []byte
+	buffer := bytes.NewBuffer(bfs)
+	err = png.Encode(buffer, img)
+	if err != nil {
+		return nil, errors.New("无法获取图片校验码")
+	}
+
+	u := map[string]interface{}{
+		"code": 0,
+		"msg" : "获取成功",
+		"img": bfs,
+		"num": str,
+	}
+	return u, nil
+}
