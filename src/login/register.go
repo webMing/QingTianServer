@@ -95,6 +95,10 @@ func Register(c *gin.Context) (user map[string]interface{}, err error) {
 		}
 	*/
 
+	// 注册成功后还需要移除 图片验证码(效率), 短信码
+
+	// 需要判断 当前手机号是否注册过
+
 	// 判断如果已经插入过,就不要设置
 	res, err := db.Exec("INSERT INTO user(user_name,passwd,phone_num,user_client) SELECT ?,?,?,? from dual WHERE NOT EXISTS(SELECT phone_num from user WHERE phone_num = ?)", re.PhoneNum, re.Passwd, re.PhoneNum, re.UserClient, re.PhoneNum)
 	if err != nil {

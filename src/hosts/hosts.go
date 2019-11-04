@@ -22,7 +22,7 @@ func Server() {
 
 
 	/* 获取UUID
-	该UUID也是可以由客户端生成
+	该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)
 	*/
 	group.POST("/uuid", func(c *gin.Context) {
 		uuid, err := login.UUID()
@@ -92,6 +92,8 @@ func Server() {
 			panic(err)
 		}
 		phoneNum := m["phone_num"]
+		uuid  := m["uuid"]
+		checkNum := m["check_num"]
 
 		//检测手机号位数
 		if utf8.RuneCountInString(phoneNum) != 11 {
@@ -101,8 +103,10 @@ func Server() {
 			})
 			return
 		}
+		//检测uuid checkNum 是否为空
+
 		// 发送验证码网络请求
-		code, err := login.SmsVerificationCode(phoneNum)
+		code, err := login.SmsVerificationCode(phoneNum,uuid,checkNum)
 		c.JSON(http.StatusOK, gin.H{
 			"code": code,
 			"msg":  err.Error(),
