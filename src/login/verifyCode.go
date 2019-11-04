@@ -34,11 +34,22 @@ func init() {
 }
 
 //SmsVerificationCode  获取验证码
-func SmsVerificationCode(phoneNum string) (code string, err error) {
-	return smsReqeust(phoneNum)
+func SmsVerificationCode(phoneNum string, uuid string, checkNum string) (code string, err error) {
+	return smsReqeust(phoneNum, uuid, code)
 }
 
-func smsReqeust(phoneNum string) (code string, err error) {
+func smsReqeust(phoneNum, uuid, checkNum string) (code string, err error) {
+
+	//输入的UUID Code 是否与 服务器相同
+	checkCode, err := redis.String(tools.RedisHelperGet(uuid))
+	if err != nil {
+		return "1", err
+	}
+	if strings.Compare(checkNum,checkCode) !=0 {
+		return "1", errors.New("输入UUID不对")
+	}
+
+	//是否 需要在redis中的缓存
 
 	expireTime := 3 * 60 //过期时间 3 分钟
 

@@ -8,7 +8,7 @@ import (
 
 // 地址可以更改
 // const redisConnAddr = "192.168.1.100:6379"
-// const redisConnAddr = "192.168.0.248:6379"
+//const redisConnAddr = "192.168.0.236:6379"
 const redisConnAddr = "localhost:6379"
 
 func redisHelpBase(f func(conn redis.Conn)) {
@@ -60,6 +60,15 @@ func RedisHelperTTL(key string) (reply interface{}, err error) {
 	// other 倒计时时间
 	f := func(conn redis.Conn) {
 		reply, err = conn.Do("TTL", key)
+	}
+	redisHelpBase(f)
+	return
+}
+
+// RedisHelperDel 删除某个键
+func RedisHelperDel(key string) (reply interface{}, err error) {
+	f := func(conn redis.Conn){
+		reply, err = conn.Do("DEL",key)
 	}
 	redisHelpBase(f)
 	return

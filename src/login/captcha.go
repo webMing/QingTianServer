@@ -43,6 +43,9 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 		return u, nil
 	}
 
+	//不管是否存在 都尝试从redis中移除
+	tools.RedisHelperDel(re.UUID)
+
 	cap := captcha.New()
 
 	//这里使用绝对路径
@@ -55,7 +58,7 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 	if err := cap.SetFont(path); err != nil {
 		panic(err.Error())
 	}
-
+    
 	/*
 	   //We can load font not only from localfile, but also from any []byte slice
 	   	fontContenrs, err := ioutil.ReadFile("comic.ttf")
@@ -73,7 +76,8 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 	cap.SetFrontColor(color.RGBA{255, 255, 255, 255})
 	cap.SetBkgColor(color.RGBA{255, 0, 0, 255}, color.RGBA{0, 0, 255, 255}, color.RGBA{0, 153, 0, 255})
 
-	img, str := cap.Create(6, captcha.NUM)
+	//设置图片验证码长度
+	img, str := cap.Create(4, captcha.NUM)
 	// var bfs []byte
 	buffer := bytes.NewBuffer(make([]byte, 0))
 	err = png.Encode(buffer, img)
@@ -87,6 +91,11 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 		"img":  base64.StdEncoding.EncodeToString(buffer.Bytes()), //base64  编码
 		"num":  str,
 	}
+
+	//uuid 存放在redis中
+	expireTime :=  60 * 30   //过期时间 半个小时
+	tools.RedisHelperSet(re.UUID, str, expireTime)
+ 
 	return u, nil
 
 }
