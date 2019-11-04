@@ -2,9 +2,16 @@ package login
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"image/color"
 	"image/png"
+
+	// "io/ioutil"
+	"path"
+
+	"stephanie.io/tools"
+
 	"unicode/utf8"
 
 	"github.com/afocus/captcha"
@@ -38,7 +45,14 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 
 	cap := captcha.New()
 
-	if err := cap.SetFont("comic.ttf"); err != nil {
+	//这里使用绝对路径
+	// dir := filepath.Dir("comic")
+	//v, err := filepath.unixAbs("comic.ttf")
+	//fmt.Printf("%s",v)
+	pth, err := tools.GetCurrentFileDir()
+	// 部署的时候可能会出错.文件资源的路径不对.
+	path := path.Join(pth, "comic.ttf")
+	if err := cap.SetFont(path); err != nil {
 		panic(err.Error())
 	}
 
@@ -60,8 +74,8 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 	cap.SetBkgColor(color.RGBA{255, 0, 0, 255}, color.RGBA{0, 0, 255, 255}, color.RGBA{0, 153, 0, 255})
 
 	img, str := cap.Create(6, captcha.NUM)
-	var bfs []byte
-	buffer := bytes.NewBuffer(bfs)
+	// var bfs []byte
+	buffer := bytes.NewBuffer(make([]byte, 0))
 	err = png.Encode(buffer, img)
 	if err != nil {
 		return nil, errors.New("无法获取图片校验码")
@@ -69,9 +83,10 @@ func Capthca(c *gin.Context) (user map[string]interface{}, err error) {
 
 	u := map[string]interface{}{
 		"code": 0,
-		"msg" : "获取成功",
-		"img": bfs,
-		"num": str,
+		"msg":  "获取成功",
+		"img":  base64.StdEncoding.EncodeToString(buffer.Bytes()), //base64  编码
+		"num":  str,
 	}
 	return u, nil
+
 }
