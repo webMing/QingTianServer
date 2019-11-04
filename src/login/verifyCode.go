@@ -35,7 +35,7 @@ func init() {
 
 //SmsVerificationCode  获取验证码
 func SmsVerificationCode(phoneNum string, uuid string, checkNum string) (code string, err error) {
-	return smsReqeust(phoneNum, uuid, code)
+	return smsReqeust(phoneNum, uuid, checkNum)
 }
 
 func smsReqeust(phoneNum, uuid, checkNum string) (code string, err error) {
