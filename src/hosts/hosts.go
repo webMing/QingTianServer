@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"unicode/utf8"
 
-	"stephanie.io/login"
-
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+
+	"stephanie.io/login"
 )
 
 const (
@@ -17,9 +18,12 @@ const (
 
 // Server  provide service
 func Server() {
+
+	//chanage v8 to v9
+	binding.Validator = new(defaultValidator)
+
 	router := gin.Default()
 	group := router.Group(baseURL)
-
 
 	/* 获取UUID
 	该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)
@@ -42,7 +46,6 @@ func Server() {
 		}
 		c.JSON(http.StatusOK, uuid)
 	})
-
 
 	/* 用户注册
 	phone_num       	手机号
@@ -84,7 +87,7 @@ func Server() {
 		******************************************/
 
 		len := c.Request.ContentLength
-		body := make([]byte,len)
+		body := make([]byte, len)
 		c.Request.Body.Read(body)
 		m := map[string]string{}
 		err := json.Unmarshal(body, &m)
@@ -92,7 +95,7 @@ func Server() {
 			panic(err)
 		}
 		phoneNum := m["phone_num"]
-		uuid  := m["uuid"]
+		uuid := m["uuid"]
 		checkNum := m["check_num"]
 
 		//检测手机号位数
@@ -106,7 +109,7 @@ func Server() {
 		//检测uuid checkNum 是否为空
 
 		// 发送验证码网络请求
-		code, err := login.SmsVerificationCode(phoneNum,uuid,checkNum)
+		code, err := login.SmsVerificationCode(phoneNum, uuid, checkNum)
 		c.JSON(http.StatusOK, gin.H{
 			"code": code,
 			"msg":  err.Error(),
