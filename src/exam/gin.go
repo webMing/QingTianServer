@@ -1,14 +1,18 @@
-package login
+package exam 
 
 import (
+	"github.com/gin-gonic/gin/binding"
 	"fmt"
-
+    "stephanie.io/hosts"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
 )
 
 // GinA 测试内容
 func GinA() {
+
+	//chanage v8 to v9
+	binding.Validator = new(hosts.defaultValidator)
 
 	router := gin.Default()
 	router.GET("/hello", func(context *gin.Context) {

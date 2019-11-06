@@ -9,6 +9,11 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
+// CustomValidator 导出可用
+// func CustomValidator() interface{} {
+// 	return new(defaultValidator)
+// }
+
 type defaultValidator struct {
 	once     sync.Once
 	validate *validator.Validate
