@@ -1,8 +1,6 @@
 package exam
 
 import (
-	"fmt"
-
 	"stephanie.io/constv"
 
 	"github.com/gin-gonic/gin"
@@ -49,7 +47,7 @@ func GinA() {
 			}
 
 		}
-		
+
 		context.JSON(200, res)
 		// context.XML(200, res)
 
