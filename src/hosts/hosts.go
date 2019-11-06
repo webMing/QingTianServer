@@ -1,6 +1,7 @@
 package hosts
 
 import (
+	
 	"encoding/json"
 	"log"
 	"net/http"
@@ -20,7 +21,7 @@ const (
 func Server() {
 
 	//chanage v8 to v9
-	binding.Validator = new(defaultValidator)
+	binding.Validator = new(DefaultValidator)
 
 	router := gin.Default()
 	group := router.Group(baseURL)

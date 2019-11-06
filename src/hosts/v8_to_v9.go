@@ -9,19 +9,16 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
-// CustomValidator 导出可用
-// func CustomValidator() interface{} {
-// 	return new(defaultValidator)
-// }
-
-type defaultValidator struct {
+// DefaultValidator 可导出
+type DefaultValidator struct {
 	once     sync.Once
 	validate *validator.Validate
 }
 
-var _ binding.StructValidator = &defaultValidator{}
+var _ binding.StructValidator = &DefaultValidator{}
 
-func (v *defaultValidator) ValidateStruct(obj interface{}) error {
+// ValidateStruct 可导出
+func (v *DefaultValidator) ValidateStruct(obj interface{}) error {
 	if kindOfData(obj) == reflect.Struct {
 		v.lazyinit()
 		if err := v.validate.Struct(obj); err != nil {
@@ -31,12 +28,13 @@ func (v *defaultValidator) ValidateStruct(obj interface{}) error {
 	return nil
 }
 
-func (v *defaultValidator) Engine() interface{} {
+// Engine 可导出
+func (v *DefaultValidator) Engine() interface{} {
 	v.lazyinit()
 	return v.validate
 }
 
-func (v *defaultValidator) lazyinit() {
+func (v *DefaultValidator) lazyinit() {
 	v.once.Do(func() {
 		v.validate = validator.New()
 		v.validate.SetTagName("binding")
