@@ -1,6 +1,7 @@
 package hosts
 
 import (
+	"time"
 	
 	"encoding/json"
 	"log"
@@ -25,6 +26,14 @@ func Server() {
 
 	router := gin.Default()
 	group := router.Group(baseURL)
+
+	/***
+	gin是不是并发执行? 是并发执行
+	**/
+	group.GET("/hello", func(c *gin.Context) {
+		time.Sleep(time.Second * 6)
+		c.JSON(http.StatusOK,map[string]int{"a":1})
+	})
 
 	/* 获取UUID
 	该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)

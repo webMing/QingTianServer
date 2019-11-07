@@ -14,19 +14,12 @@ import (
 	"stephanie.io/constv"
 	"stephanie.io/tools"
 
-	"github.com/gomodule/redigo/redis"
-
 	"github.com/afocus/captcha"
 	"github.com/gin-gonic/gin"
 )
 
 // Capthca 图片验证码
 func Capthca(c *gin.Context) interface{} {
-
-	f := func(c redis.Conn){
-		fmt.Println(c)
-	}
-	tools.HandleRedisErr(f)
 
 	type request struct {
 		UUID   string `form:"uuid" json:"uuid" binding:"required"`
@@ -54,7 +47,8 @@ func Capthca(c *gin.Context) interface{} {
 		return outerRes
 	}
 
-	//不管是否存在 都尝试从redis中移除
+	//不管是否存在 都尝试从redis中移除(防止两个UUID不一样的问题)； 
+	//可以不删除后面设置的时候会覆盖,
 	tools.RedisHelperDel(re.UUID)
 
 	cap := captcha.New()
@@ -100,6 +94,15 @@ func Capthca(c *gin.Context) interface{} {
 		return outerRes
 	}
 
+	//uuid 存放在redis中
+	expireTime := 60 * 30 //过期时间 半个小时
+	_, err = tools.RedisHelperSet(re.UUID, imgCode, expireTime)
+	if err != nil {
+		outerRes.Code = constv.QTFetchFailtCode
+		outerRes.Msg = "reids中存放图片验证码时出错"
+		return outerRes
+	} 
+
 	type inerRes struct {
 		Img       string `form:"img" json:"img"`
 		ImageCode string `form:"imageCode" json:"imageCode"`
@@ -108,15 +111,6 @@ func Capthca(c *gin.Context) interface{} {
 	inerStrc.Img = base64.StdEncoding.EncodeToString(buffer.Bytes()) //base64编码
 	inerStrc.ImageCode = imgCode
 	outerRes.Data = inerStrc
-
-	//uuid 存放在redis中
-	expireTime := 60 * 30 //过期时间 半个小时
-	_, err = tools.RedisHelperSet(re.UUID, imgCode, expireTime)
-	if err != nil {
-		outerRes.Code = constv.QTFetchFailtCode
-		outerRes.Msg = "reids中存放图片验证码时出错"
-		return outerRes
-	}
 
 	return outerRes
 
