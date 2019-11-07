@@ -30,11 +30,7 @@ func Server() {
 	该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)
 	*/
 	group.POST("/uuid", func(c *gin.Context) {
-		uuid, err := login.UUID()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		c.JSON(http.StatusOK, uuid)
+		c.JSON(http.StatusOK, login.UUID())
 	})
 
 	/* 获取图片验证码

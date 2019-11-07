@@ -1,10 +1,10 @@
 package main
 
-import (
-	"stephanie.io/exam"
-)
+import "stephanie.io/hosts"
+
+// "stephanie.io/exam"
 
 func main() {
-	// hosts.Server()
-	exam.GinA()
+	hosts.Server()
+	// exam.GinA()
 }

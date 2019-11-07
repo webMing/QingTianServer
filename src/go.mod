@@ -11,6 +11,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/leodido/go-urn v1.2.0 // indirect
+	github.com/satori/go.uuid v1.2.0
 	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
