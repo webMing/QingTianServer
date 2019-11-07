@@ -1,27 +1,56 @@
 package login
 
 import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	uuid "github.com/satori/go.uuid"
+	"gopkg.in/go-playground/validator.v9"
+	"stephanie.io/constv"
 	"stephanie.io/tools"
-	"github.com/satori/go.uuid"
 )
 
 // GitHub : https://github.com/satori/go.uuid
 // GoDoc  : https://godoc.org/github.com/satori/go.uuid
 
 // UUID 可导出
-func UUID() interface{} {
-	type  res struct {
-		UUID string `form:"uuid" json:"uuid"`
+func UUID(c *gin.Context) interface{} {
+	type request struct {
+		Client string `form:"client" json:"client" binding:"required"`
 	}
+	re := new(request)
+	err := c.ShouldBind(re)
+	outerRes := tools.OuterSucssStruct()
+	if err != nil {
+		outerRes.Code = constv.QTFetchFailtCode
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			outerRes.Msg = constv.QTInvalidValidationMsg
+		} else {
+			for _, err := range err.(validator.ValidationErrors){
+				switch err.Field() {
+					case "Client":
+						outerRes.Msg = "client 不能为空"
+					default:
+						outerRes.Msg = fmt.Sprintf("%s 该字段存在问题",err.Field())
+				}
+			}
+		}
+		return outerRes
+	}
+
 	id := uuid.NewV4().String()
 	if id == "" {
-		return tools.OuterFailtStruct()
+		outerRes.Code = constv.QTFetchFailtCode
+		outerRes.Msg = "无法获取UUID"
+		return outerRes
 	}
-	uid := new(res)
+
+	type inerRes struct {
+		UUID string `form:"uuid" json:"uuid"`
+	}
+	uid := new(inerRes)
 	uid.UUID = id
-	base := tools.OuterSucssStruct()
-	base.Data = uid
-	return base
+	outerRes.Data = uid
+	return outerRes
 
 }
 

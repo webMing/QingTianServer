@@ -5,5 +5,5 @@ import (
 )
 
 func TestUUID(t* testing.T){
-	t.Logf("\n ==%+v==\n",UUID())
+	t.Logf("\n ==%+v==\n",UUID(nil))
 }

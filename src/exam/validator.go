@@ -51,7 +51,7 @@ func validateCm() {
 			fmt.Println(err)
 			return
 		}
-		tp := err.(validator.ValidationErrors)[0]
+		tp := err.(validator.ValidationErrors)[0] //这样有问题哦
 		switch tp.Field() {
 		case "It":
 				fmt.Println("should")

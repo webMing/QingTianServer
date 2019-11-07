@@ -53,5 +53,5 @@ func GinA() {
 
 	})
 	// 指定地址和端口号
-	router.Run("localhost:9090")
+	router.Run("localhost:8080")
 }

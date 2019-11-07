@@ -20,7 +20,7 @@ const (
 // Server  provide service
 func Server() {
 
-	//chanage v8 to v9
+	//chanage version v8 to v9
 	binding.Validator = new(DefaultValidator)
 
 	router := gin.Default()
@@ -30,18 +30,14 @@ func Server() {
 	该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)
 	*/
 	group.POST("/uuid", func(c *gin.Context) {
-		c.JSON(http.StatusOK, login.UUID())
+		c.JSON(http.StatusOK, login.UUID(c))
 	})
 
 	/* 获取图片验证码
 	uuid string
 	*/
 	group.POST("/imgCheckCode", func(c *gin.Context) {
-		uuid, err := login.Capthca(c)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		c.JSON(http.StatusOK, uuid)
+		c.JSON(http.StatusOK,login.Capthca(c))
 	})
 
 	/* 用户注册
