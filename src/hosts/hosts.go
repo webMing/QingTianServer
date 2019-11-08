@@ -1,8 +1,6 @@
 package hosts
 
 import (
-	"time"
-	
 	"encoding/json"
 	"log"
 	"net/http"
@@ -31,8 +29,22 @@ func Server() {
 	gin是不是并发执行? 是并发执行
 	**/
 	group.GET("/hello", func(c *gin.Context) {
-		time.Sleep(time.Second * 6)
-		c.JSON(http.StatusOK,map[string]int{"a":1})
+		// time.Sleep(time.Second * 6)
+		m := map[string]interface{}{
+			"code": "0",
+			"msg":  "请求成功",
+		}
+		var data []map[string]string
+		for i := 0; i < 40; i++ {
+			t := map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}
+			data = append(data, t)
+		}
+		m["data"] = data
+		c.JSON(http.StatusOK, m)
 	})
 
 	/* 获取UUID
@@ -46,7 +58,7 @@ func Server() {
 	uuid string
 	*/
 	group.POST("/imgCheckCode", func(c *gin.Context) {
-		c.JSON(http.StatusOK,login.Capthca(c))
+		c.JSON(http.StatusOK, login.Capthca(c))
 	})
 
 	/* 用户注册
