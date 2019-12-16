@@ -1,6 +1,7 @@
 package hosts
 
 import (
+	"stephanie.io/tools"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -13,65 +14,44 @@ import (
 )
 
 const (
-	baseURL string = "api/v1"
+	baseV1URL   = "api/v1"
+	baseTestURL = "api/test"
 )
 
-// Server  provide service
-func Server() {
+/*建议每个包中如果有只有一个init函数;func init(){}*/
 
+// Server  开始服务
+func Server() {
+	
 	//chanage version v8 to v9
 	binding.Validator = new(DefaultValidator)
-
 	router := gin.Default()
-	group := router.Group(baseURL)
+	router.Use(gin.BasicAuth(nil))
+	router.Use(userLoginChecker())
+	gpV1   := router.Group(baseV1URL)
+	// gpTest := router.Group(baseTestURL)
 
-	/***
-	gin是不是并发执行? 是并发执行
-	**/
-	group.GET("/hello", func(c *gin.Context) {
-		// time.Sleep(time.Second * 6)
-		m := map[string]interface{}{
-			"code": "0",
-			"msg":  "请求成功",
-		}
-		var data []map[string]string
-		for i := 0; i < 40; i++ {
-			t := map[string]string{
-				"key1": "value1",
-				"key2": "value2",
-				"key3": "value3",
-			}
-			data = append(data, t)
-		}
-		m["data"] = data
-		c.JSON(http.StatusOK, m)
-	})
+	serV1(gpV1)
+	// serTest(gpTest)
+	
+	router.Run(":8080")	
+	
+}
 
-	/* 获取UUID
-	该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)
-	*/
-	group.POST("/uuid", func(c *gin.Context) {
+func serV1(gp *gin.RouterGroup) {
+
+	/* 获取UUID 该UUID也是可以由客户端生成(争议UUID是否需要从这里获取)*/
+	gp.POST("/uuid", func(c *gin.Context) {
 		c.JSON(http.StatusOK, login.UUID(c))
 	})
 
-	/* 获取图片验证码
-	uuid string
-	*/
-	group.POST("/imgCheckCode", func(c *gin.Context) {
+	/* 获取图片验证码 */
+	gp.POST("/imgCheckCode", func(c *gin.Context) {
 		c.JSON(http.StatusOK, login.Capthca(c))
 	})
 
-	/* 用户注册
-	phone_num       	手机号
-	passwd sha265  		密码
-	user_client    		客服端类型
-	client_version 		客户端版本
-	time_code      		时间戳
-	global_province_id  省区id
-	union_id
-	device_toke
-	*/
-	group.POST("/register", func(c *gin.Context) {
+	/* 用户注册 */
+	gp.POST("/register", func(c *gin.Context) {
 		user, err := login.Register(c)
 		if err != nil {
 			log.Fatalln(err)
@@ -79,10 +59,8 @@ func Server() {
 		c.JSON(http.StatusOK, user)
 	})
 
-	/* 获取验证码
-	   phoneNum 手机号
-	*/
-	group.POST("/verifyCode", func(c *gin.Context) {
+	/* 获取验证码 */
+	gp.POST("/verifyCode", func(c *gin.Context) {
 		/***********************************
 		cc := c.PostForm("phone_num")
 		phoneNum := c.Query("phone_num")
@@ -118,7 +96,6 @@ func Server() {
 				"code": 1,
 				"msg":  "手机号位数不是11位",
 			})
-			return
 		}
 		//检测uuid checkNum 是否为空
 
@@ -129,5 +106,38 @@ func Server() {
 			"msg":  err.Error(),
 		})
 	})
-	router.Run(":8080")
+}
+
+func serTest(gp *gin.RouterGroup){
+
+	/**gin是不是并发执行? 结果:并发执行 **/
+	gp.GET("/hello", func(c *gin.Context) {
+		// time.Sleep(time.Second * 6)
+		m := map[string]interface{}{
+			"code": "0",
+			"msg":  "请求成功",
+		}
+		var data []map[string]string
+		for i := 0; i < 20; i++ {
+			t := map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}
+			data = append(data, t)
+		}
+		m["data"] = data
+		c.JSON(http.StatusOK, m)
+	})
+}
+
+func userLoginChecker() gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+	   token :=	c.GetHeader("Authorization")
+	   if utf8.RuneCountInString(token) == 0{
+		   res := tools.OuterFailtStruct()
+		   res.Msg = "用户已退出登录"
+		   c.AbortWithStatusJSON(http.StatusOK, res)
+	   }
+	})
 }
